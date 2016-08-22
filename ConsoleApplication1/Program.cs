@@ -255,11 +255,14 @@ namespace ConsoleApplication1
             return newImg;
         }
 
-        public Bitmap limiarizacao(int limiar)
+        public Bitmap limiarizacao(int limiar, Boolean m)
         {
             int r, g, b;
+            int limiarPadrao = 127;
             Bitmap limiarImg = (Bitmap)img.getImg();
-
+            if(!m) {
+                limiar = limiarPadrao;
+            }
             
             for(int i = 0;i < img.getWidth(); i++)
             {
