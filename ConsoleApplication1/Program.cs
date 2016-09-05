@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -15,14 +15,18 @@ namespace ConsoleApplication1
         static void Main(string[] args)
         {
             ManagerImage mig = new ManagerImage("test1.png");
-            Bitmap img = mig.filtroMedia(15);
-            img.Save("test4.png");
+            mig.convertToYIQ();
+            Bitmap img = mig.convertToRGB();
+            Bitmap img2 = mig.monocromatic(1);
+            img.Save("test5.png");
+            img2.Save("test6.png");
         }
     }
 
     public class ManagerImage
     {
         private MyImage img;
+        private double[] yiq;
         
         public ManagerImage(String url)
         {
@@ -32,20 +36,51 @@ namespace ConsoleApplication1
         public void convertToYIQ()
         {
             int count = 0;
-            double[] yiq = new double[img.getWidth() * img.getHeight()];
+            yiq = new double[img.getWidth() * img.getHeight()*3];
+            double[] aux = new double[3];
             for(int i = 0;i < img.getWidth(); ++i)
             {
                 for(int j = 0;j < img.getHeight(); ++j)
                 {
-
-                    yiq[count] = img.getColorYIQ(i, j)[0];
+                    aux = img.getColorYIQ(i, j);
+                    yiq[count] = aux[0];
                     count++;
-                    yiq[count] = img.getColorYIQ(i, j)[1];
+                    yiq[count] = aux[1];
                     count++;
-                    yiq[count] = img.getColorYIQ(i, j)[2];
+                    yiq[count] = aux[2];
                     count++;
                 }
             }     
+        }
+
+        public Bitmap convertToRGB()
+        {
+            int count = 0, r, b, g;
+            double y, i, q;
+            Bitmap image = (Bitmap)img.getImg();
+            for (int n = 0; n < img.getWidth(); ++n)
+            {
+                for (int p = 0; p < img.getHeight(); ++p)
+                {
+                    y = yiq[count];
+                    count++;
+                    i = yiq[count];
+                    count++;
+                    q = yiq[count];
+                    count++;
+                    r = (int)(1.0 * y + 0.956 * i + 0.621 * q);
+                    g = (int)(1.0 * y - 0.272 * i - 0.647 * q);
+                    b = (int)(1.0 * y - 1.106 * i + 1.703 * q);
+
+                    r = limite(r);
+                    g = limite(g);
+                    b = limite(b);
+                    
+                    image.SetPixel(n, p, Color.FromArgb(r, g, b));
+                }
+            }
+
+            return image;
         }
 
         public Bitmap oneColorTone(int  banda)
@@ -110,6 +145,36 @@ namespace ConsoleApplication1
             return toneImg;
         }
 
+        public Bitmap negativoRGB()
+        {
+            Bitmap image = (Bitmap)img.getImg();
+            int r, g, b;
+            for(int i = 0; i < img.getWidth(); ++i)
+            {
+                for (int j = 0; j < img.getHeight(); ++j) {
+                    r = 255 - image.GetPixel(i, j).R;
+                    g = 255 - image.GetPixel(i, j).G;
+                    b = 255 - image.GetPixel(i, j).B;
+                    image.SetPixel(i, j, Color.FromArgb(r, g, b));
+                }
+            }
+
+            return image;
+        }
+
+        public Bitmap negativoY()
+        {
+            Bitmap image;
+            convertToYIQ();
+            double y;
+            for (int i = 0; i < yiq.Length; i += 3)
+            {
+                yiq[i] = 255 - yiq[i];
+            }
+            image = convertToRGB();
+            return image;
+        }
+
         public Bitmap brightnessAdd(int c)
         {
             int r, g, b;
@@ -142,13 +207,30 @@ namespace ConsoleApplication1
             return imgBright;
         }
 
+        public Bitmap brightnessAddY(int c)
+        {
+            Bitmap image;
+            double y;
+
+            if (c > 255) { c = 255; }
+            if (c < -255) { c = -255; }
+            convertToYIQ();
+            
+            for (int i = 0; i < yiq.Length; i += 3)
+            {
+                yiq[i] = yiq[i] + c;
+            }
+            image = convertToRGB();
+            return image;
+        }
+
         public Bitmap brightnessMult(int c)
         {
             int r, g, b;
             Bitmap imgBright = (Bitmap)img.getImg();
 
-            if (c > 50) { c = 255; }
-            if (c < -50) { c = -255; }
+            if (c > 255) { c = 255; }
+            if (c < -255) { c = -255; }
 
             for (int i = 0; i < img.getWidth(); i++)
             {
@@ -174,6 +256,23 @@ namespace ConsoleApplication1
             }
 
             return imgBright;
+        }
+
+        public Bitmap brightnessMultY(int c)
+        {
+            Bitmap image;
+            double y;
+
+            if (c > 255) { c = 255; }
+            if (c < -255) { c = -255; }
+            convertToYIQ();
+
+            for (int i = 0; i < yiq.Length; i += 3)
+            {
+                yiq[i] = yiq[i]*c;
+            }
+            image = convertToRGB();
+            return image;
         }
 
         public Bitmap filtroMedia(int d)
@@ -232,6 +331,63 @@ namespace ConsoleApplication1
             return newImg;
         }
 
+        public Bitmap filtroMediana(int d)
+        {
+            Bitmap newImg = (Bitmap)img.getImg();
+            Bitmap imgClone = (Bitmap)img.getImg();
+            int count = 0;
+            int[] matrix = new int[d];
+            int[] matrixFiltroR = new int[d * d];
+            int[] matrixFiltroG = new int[d * d];
+            int[] matrixFiltroB = new int[d * d];
+
+            matrix[0] = 0;
+            for (int i = 1; i < d; ++i)
+            {
+                if (i % 2 == 1)
+                {
+                    matrix[i] = -count;
+                }
+                else
+                {
+                    matrix[i] = count;
+                    ++count;
+                }
+            }
+
+            for (int i = 0; i < img.getWidth(); ++i)
+            {
+                for (int j = 0; j < img.getHeight(); ++j)
+                {
+                    for (int k = 0; k < d; ++k)
+                    {
+                        for (int w = 0; w < d; ++w)
+                        {
+                            if ((i + matrix[k] < 0) || (j + matrix[w]) < 0 || (i + matrix[k]) > img.getWidth() - 1 || (j + matrix[w]) > img.getHeight() - 1)
+                            {
+                                matrixFiltroR[count] = 0;
+                                matrixFiltroG[count] = 0;
+                                matrixFiltroB[count] = 0;
+                            }
+                            else
+                            {
+                                matrixFiltroR[count] = imgClone.GetPixel(i + matrix[k], j + matrix[w]).R;
+                                matrixFiltroG[count] = imgClone.GetPixel(i + matrix[k], j + matrix[w]).G;
+                                matrixFiltroB[count] = imgClone.GetPixel(i + matrix[k], j + matrix[w]).B;
+                            }
+                            count++;
+                        }
+                    }
+                    count = 0;
+                    int medRed = mediana(d, matrixFiltroR);
+                    int medGreen = mediana(d, matrixFiltroG);
+                    int medBlue = mediana(d, matrixFiltroB);
+                    newImg.SetPixel(i, j, Color.FromArgb(medRed, medGreen, medBlue));
+                }
+            }
+            return newImg;
+        }
+
         public Bitmap unirImagens(Bitmap img1, Bitmap img2)
         {
             if(img1.Height != img2.Height || img2.Width != img1.Width)
@@ -255,13 +411,23 @@ namespace ConsoleApplication1
             return newImg;
         }
 
-        public Bitmap limiarizacao(int limiar, Boolean m)
+        public Bitmap limiarizacao(int l, Boolean m)
         {
             int r, g, b;
-            int limiarPadrao = 127;
+           
+            int limiar = l;
             Bitmap limiarImg = (Bitmap)img.getImg();
-            if(!m) {
-                limiar = limiarPadrao;
+            if(!m)
+            {
+                int media = 0; ;
+                for(int i = 0; i < img.getWidth(); ++i)
+                {
+                    for(int j = 0; j < img.getHeight(); ++j)
+                    {
+                        media += img.getColorRGB(i, j)[0] + img.getColorRGB(i, j)[1] + img.getColorRGB(i, j)[2];
+                    }
+                }
+                limiar = (int) media / (img.getWidth() * img.getHeight());
             }
             
             for(int i = 0;i < img.getWidth(); i++)
@@ -274,22 +440,54 @@ namespace ConsoleApplication1
                     if(r != g || r != b || g != b) { return null; }
                     if (r < limiar)
                     {
-                        limiarImg.SetPixel(i, j, Color.Black);
+                        limiarImg.SetPixel(i, j, Color.FromArgb(0,0,0));
                     }
                     else
                     {
-                        limiarImg.SetPixel(i, j, Color.White);
+                        limiarImg.SetPixel(i, j, Color.FromArgb(255,255,255));
                     }
                 }
             }
 
             return limiarImg;
-
         }
 
+        private int limite(int x)
+        {
+            if(x > 255)
+            {
+                x = 255;
+            }
+            if(x < 0)
+            {
+                x = 0;
+            }
+
+            return x;
+        }
+
+        private int mediana(int d, int[] matrix)
+        {
+            int i = 0;
+            Boolean houveTroca = true;
+            while(houveTroca)
+            {
+                houveTroca = false;
+                for (i = 0; i < (d * d)-1; ++i)
+                {
+                    if(matrix[i] > matrix[i+1])
+                    {
+                        int aux = matrix[i];
+                        matrix[i] = matrix[i + 1];
+                        matrix[i + 1] = aux;
+                        houveTroca = true;
+                    }
+                }
+            }
+
+            return matrix[i / 2];
+        }
     }
-
-
 
     public class MyImage
     {
