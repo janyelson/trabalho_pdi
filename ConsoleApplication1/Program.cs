@@ -14,12 +14,28 @@ namespace ConsoleApplication1
     {
         static void Main(string[] args)
         {
-            ManagerImage mig = new ManagerImage("test1.png");
+            ManagerImage mig = new ManagerImage("lenac.png");
+            ManagerImage mono = new ManagerImage("lena.png");
+            Bitmap lena = new Bitmap("lenac.png");
+            Bitmap android = new Bitmap("Tomato.png");
+            /*
             mig.convertToYIQ();
-            Bitmap img = mig.convertToRGB();
-            Bitmap img2 = mig.monocromatic(1);
-            img.Save("test5.png");
-            img2.Save("test6.png");
+            mono.convertToYIQ();
+            mig.convertToRGB().Save("lenaConvert.png");
+            mig.monocromatic(2).Save("monocromatic2.png");
+            mig.brightnessAdd(-50).Save("brilhoRGB-50.png");
+            mig.brightnessAddY(-50).Save("brilhoY-50.png");
+            mig.brightnessMult(2).Save("brilhoRGBv2.png");
+            mig.brightnessMultY(2).Save("brilhoYv2.png");
+            mig.negativoY().Save("negativoY.png");
+            mig.negativoRGB().Save("negativoRGB.png");
+            mig.oneColorTone(2).Save("colorido2.png");
+            mig.filtroMediana(15).Save("mediana7.png");
+            mig.filtroMedia(7).Save("media7.png");
+            */
+            mig.unirImagens(lena, android).Save("unir.png");
+            //mono.limiarizacao(127, true).Save("limiar127.png");
+            //mono.limiarizacao(127, false).Save("limiarPadrao.png");
         }
     }
 
@@ -31,6 +47,7 @@ namespace ConsoleApplication1
         public ManagerImage(String url)
         {
             img = new MyImage(url);
+            
         }
 
         public void convertToYIQ()
@@ -97,10 +114,10 @@ namespace ConsoleApplication1
                             monoImg.SetPixel(i, j, Color.FromArgb(monoImg.GetPixel(i, j).R, 0, 0));
                             break;
                         case 2:
-                            monoImg.SetPixel(i, j, Color.FromArgb(monoImg.GetPixel(i, j).G, 0, 0));
+                            monoImg.SetPixel(i, j, Color.FromArgb(0, monoImg.GetPixel(i, j).G, 0));
                             break;
                         case 3:
-                            monoImg.SetPixel(i, j, Color.FromArgb(monoImg.GetPixel(i, j).B, 0, 0));
+                            monoImg.SetPixel(i, j, Color.FromArgb(0, 0, monoImg.GetPixel(i, j).B));
                             break;
                         default:
                             Console.WriteLine("Erro na escolha da banda, 1 - Red, 2 - Green, 3 - Blue.");
@@ -210,7 +227,6 @@ namespace ConsoleApplication1
         public Bitmap brightnessAddY(int c)
         {
             Bitmap image;
-            double y;
 
             if (c > 255) { c = 255; }
             if (c < -255) { c = -255; }
@@ -261,7 +277,6 @@ namespace ConsoleApplication1
         public Bitmap brightnessMultY(int c)
         {
             Bitmap image;
-            double y;
 
             if (c > 255) { c = 255; }
             if (c < -255) { c = -255; }
@@ -335,7 +350,7 @@ namespace ConsoleApplication1
         {
             Bitmap newImg = (Bitmap)img.getImg();
             Bitmap imgClone = (Bitmap)img.getImg();
-            int count = 0;
+            int count = 0, aux = 0;
             int[] matrix = new int[d];
             int[] matrixFiltroR = new int[d * d];
             int[] matrixFiltroG = new int[d * d];
@@ -346,12 +361,12 @@ namespace ConsoleApplication1
             {
                 if (i % 2 == 1)
                 {
-                    matrix[i] = -count;
+                    matrix[i] = -aux;
                 }
                 else
                 {
-                    matrix[i] = count;
-                    ++count;
+                    matrix[i] = aux;
+                    ++aux;
                 }
             }
 
@@ -392,22 +407,28 @@ namespace ConsoleApplication1
         {
             if(img1.Height != img2.Height || img2.Width != img1.Width)
             {
-                return null;
+                return img1;
             }
+            Bitmap newImg = new Bitmap(img1.Width, img1.Height);
 
-            Bitmap newImg = (Bitmap) img1.Clone();
-            int r, g, b;
-            for(int i = 0; i< img1.Width; ++i)
+            int r = 0, g = 0, b = 0;
+            for (int i = 0; i< img1.Width; ++i)
             {
-                for(int j = 0; i < img1.Height; ++j)
+                for(int j = 0; j < img1.Height; ++j)
                 {
-                    r = (img1.GetPixel(i, j).R + img2.GetPixel(i, j).R )/ 2;
-                    g = (img1.GetPixel(i, j).G + img2.GetPixel(i, j).G) / 2;
-                    b = (img1.GetPixel(i, j).B + img2.GetPixel(i, j).B) / 2;
+
+                    r = (int)(img1.GetPixel(i, j).R + img2.GetPixel(i, j).R) / 2;
+                    g = (int)(img1.GetPixel(i, j).G + img2.GetPixel(i, j).G) / 2;
+                    b = (int)(img1.GetPixel(i, j).B + img2.GetPixel(i, j).B) / 2;
+
+                    r = limite(r);
+                    g = limite(g);
+                    b = limite(b);
+                    
                     newImg.SetPixel(i, j, Color.FromArgb(r, g, b));
                 }
             }
-
+            
             return newImg;
         }
 
@@ -427,7 +448,7 @@ namespace ConsoleApplication1
                         media += img.getColorRGB(i, j)[0] + img.getColorRGB(i, j)[1] + img.getColorRGB(i, j)[2];
                     }
                 }
-                limiar = (int) media / (img.getWidth() * img.getHeight());
+                limiar = (int) media / (img.getWidth() * img.getHeight() * 3);
             }
             
             for(int i = 0;i < img.getWidth(); i++)
