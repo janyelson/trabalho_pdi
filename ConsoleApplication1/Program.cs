@@ -17,8 +17,8 @@ namespace ConsoleApplication1
             ManagerImage mig = new ManagerImage("lenac.png");
             ManagerImage mono = new ManagerImage("lena.png");
             Bitmap lena = new Bitmap("lenac.png");
-            Bitmap android = new Bitmap("Tomato.png");
-            /*
+            Bitmap android = new Bitmap("VGA.png");
+            
             mig.convertToYIQ();
             mono.convertToYIQ();
             mig.convertToRGB().Save("lenaConvert.png");
@@ -32,10 +32,10 @@ namespace ConsoleApplication1
             mig.oneColorTone(2).Save("colorido2.png");
             mig.filtroMediana(15).Save("mediana7.png");
             mig.filtroMedia(7).Save("media7.png");
-            */
+            
             mig.unirImagens(lena, android).Save("unir.png");
-            //mono.limiarizacao(127, true).Save("limiar127.png");
-            //mono.limiarizacao(127, false).Save("limiarPadrao.png");
+            mono.limiarizacao(127, true).Save("limiar127.png");
+            mono.limiarizacao(127, false).Save("limiarPadrao.png");
         }
     }
 
@@ -55,9 +55,9 @@ namespace ConsoleApplication1
             int count = 0;
             yiq = new double[img.getWidth() * img.getHeight()*3];
             double[] aux = new double[3];
-            for(int i = 0;i < img.getWidth(); ++i)
+            for(int i = 0;i < img.getHeight(); ++i)
             {
-                for(int j = 0;j < img.getHeight(); ++j)
+                for(int j = 0;j < img.getWidth(); ++j)
                 {
                     aux = img.getColorYIQ(i, j);
                     yiq[count] = aux[0];
@@ -75,9 +75,9 @@ namespace ConsoleApplication1
             int count = 0, r, b, g;
             double y, i, q;
             Bitmap image = (Bitmap)img.getImg();
-            for (int n = 0; n < img.getWidth(); ++n)
+            for (int n = 0; n < img.getHeight(); ++n)
             {
-                for (int p = 0; p < img.getHeight(); ++p)
+                for (int p = 0; p < img.getWidth(); ++p)
                 {
                     y = yiq[count];
                     count++;
@@ -105,9 +105,9 @@ namespace ConsoleApplication1
             Object obj_aux = img.getImg();
             Bitmap monoImg = (Bitmap) obj_aux;
 
-            for(int i = 0;i < img.getWidth(); i++)
+            for(int i = 0;i < img.getHeight(); i++)
             {
-                for(int j = 0;j < img.getHeight(); j++)
+                for(int j = 0;j < img.getWidth(); j++)
                 {
                     switch(banda) {
                         case 1:
@@ -134,9 +134,9 @@ namespace ConsoleApplication1
             int r, g, b;
             Bitmap toneImg = (Bitmap)img.getImg();
 
-            for(int i = 0; i < img.getWidth(); i++)
+            for(int i = 0; i < img.getHeight(); i++)
             {
-                for(int j = 0; j < img.getHeight(); j++) {
+                for(int j = 0; j < img.getWidth(); j++) {
                     r = toneImg.GetPixel(i, j).R;
                     g = toneImg.GetPixel(i, j).G;
                     b = toneImg.GetPixel(i, j).B;
@@ -166,9 +166,9 @@ namespace ConsoleApplication1
         {
             Bitmap image = (Bitmap)img.getImg();
             int r, g, b;
-            for(int i = 0; i < img.getWidth(); ++i)
+            for(int i = 0; i < img.getHeight(); ++i)
             {
-                for (int j = 0; j < img.getHeight(); ++j) {
+                for (int j = 0; j < img.getWidth(); ++j) {
                     r = 255 - image.GetPixel(i, j).R;
                     g = 255 - image.GetPixel(i, j).G;
                     b = 255 - image.GetPixel(i, j).B;
@@ -200,9 +200,9 @@ namespace ConsoleApplication1
             if(c > 255) { c = 255; }
             if(c < -255) { c = -255; }
 
-            for(int i = 0;i < img.getWidth(); i++)
+            for(int i = 0;i < img.getHeight(); i++)
             {
-                for(int j = 0;j < img.getHeight(); j++)
+                for(int j = 0;j < img.getWidth(); j++)
                 {
                     r = imgBright.GetPixel(i, j).R + c;
                     g = imgBright.GetPixel(i, j).G + c;
@@ -248,9 +248,9 @@ namespace ConsoleApplication1
             if (c > 255) { c = 255; }
             if (c < -255) { c = -255; }
 
-            for (int i = 0; i < img.getWidth(); i++)
+            for (int i = 0; i < img.getHeight(); i++)
             {
-                for (int j = 0; j < img.getHeight(); j++)
+                for (int j = 0; j < img.getWidth(); j++)
                 {
                     r = imgBright.GetPixel(i, j).R*c;
                     g = imgBright.GetPixel(i, j).G*c;
@@ -301,18 +301,18 @@ namespace ConsoleApplication1
             {
                 if(i%2 == 1)
                 {
-                    matrix[i] = -count;
+                    matrix[i] = count;
                 }
                 else
                 {
-                    matrix[i] = count;
+                    matrix[i] = -count;
                     ++count;
                 }
             }
 
-            for(int i = 0; i< img.getWidth(); ++i)
+            for(int i = 0; i< img.getHeight(); ++i)
             {
-                for(int j = 0; j< img.getHeight(); ++j)
+                for(int j = 0; j< img.getWidth(); ++j)
                 {
                     for(int k = 0;k<d;++k)
                     {
@@ -361,18 +361,18 @@ namespace ConsoleApplication1
             {
                 if (i % 2 == 1)
                 {
-                    matrix[i] = -aux;
+                    matrix[i] = aux;
                 }
                 else
                 {
-                    matrix[i] = aux;
+                    matrix[i] = -aux;
                     ++aux;
                 }
             }
 
-            for (int i = 0; i < img.getWidth(); ++i)
+            for (int i = 0; i < img.getHeight(); ++i)
             {
-                for (int j = 0; j < img.getHeight(); ++j)
+                for (int j = 0; j < img.getWidth(); ++j)
                 {
                     for (int k = 0; k < d; ++k)
                     {
@@ -411,21 +411,27 @@ namespace ConsoleApplication1
             }
             Bitmap newImg = new Bitmap(img1.Width, img1.Height);
 
-            int r = 0, g = 0, b = 0;
-            for (int i = 0; i< img1.Width; ++i)
+            int r = 0, g = 0, b = 0, a = 0, a1 = 0, a2 = 0, r1 = 0, r2 = 0, g1 = 0, g2 = 0, b1 = 0, b2 = 0;
+            for (int i = 0; i< img1.Height; ++i)
             {
-                for(int j = 0; j < img1.Height; ++j)
+                for(int j = 0; j < img1.Width; ++j)
                 {
+                    r1 = img1.GetPixel(i, j).R;
+                    r2 = img2.GetPixel(i, j).R;
+                    g1 = img1.GetPixel(i, j).G;
+                    g2 = img2.GetPixel(i, j).G;
+                    b1 = img1.GetPixel(i, j).B;
+                    b2 = img2.GetPixel(i, j).B;
+                    a1 = img1.GetPixel(i, j).A;
+                    a2 = img2.GetPixel(i, j).A;
+                    a = (a1 + a2)/ 2;
 
-                    r = (int)(img1.GetPixel(i, j).R + img2.GetPixel(i, j).R) / 2;
-                    g = (int)(img1.GetPixel(i, j).G + img2.GetPixel(i, j).G) / 2;
-                    b = (int)(img1.GetPixel(i, j).B + img2.GetPixel(i, j).B) / 2;
-
-                    r = limite(r);
-                    g = limite(g);
-                    b = limite(b);
+                    r = (r1 + r2) / 2;
+                    g = (g1 + g2) / 2;
+                    b = (b1 + b2) / 2;
                     
-                    newImg.SetPixel(i, j, Color.FromArgb(r, g, b));
+
+                    newImg.SetPixel(i, j, Color.FromArgb(a, r, g, b));
                 }
             }
             
@@ -441,9 +447,9 @@ namespace ConsoleApplication1
             if(!m)
             {
                 int media = 0; ;
-                for(int i = 0; i < img.getWidth(); ++i)
+                for(int i = 0; i < img.getHeight(); ++i)
                 {
-                    for(int j = 0; j < img.getHeight(); ++j)
+                    for(int j = 0; j < img.getWidth(); ++j)
                     {
                         media += img.getColorRGB(i, j)[0] + img.getColorRGB(i, j)[1] + img.getColorRGB(i, j)[2];
                     }
@@ -451,9 +457,9 @@ namespace ConsoleApplication1
                 limiar = (int) media / (img.getWidth() * img.getHeight() * 3);
             }
             
-            for(int i = 0;i < img.getWidth(); i++)
+            for(int i = 0;i < img.getHeight(); i++)
             {
-                for(int j = 0; j < img.getHeight(); ++j)
+                for(int j = 0; j < img.getWidth(); ++j)
                 {
                     r = limiarImg.GetPixel(i, j).R;
                     g = limiarImg.GetPixel(i, j).G;
